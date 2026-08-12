@@ -35,7 +35,8 @@
     .eyebrow { color: var(--mint-700); font-weight: 800; letter-spacing: .08em; font-size: .82rem; margin-bottom: 7px; }
     h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.08; letter-spacing: -.04em; }
     .subtitle { color: var(--muted); margin: 13px 0 0; font-size: 1rem; }
-    .cat-card { justify-self: end; width: 220px; aspect-ratio: 1.25; border-radius: 34px; background: linear-gradient(145deg, #dcf6e8, #e9e4ff); display: grid; place-items: center; box-shadow: var(--shadow); transform: rotate(2deg); }
+    .cat-card { position: relative; justify-self: end; width: 220px; aspect-ratio: 1.25; border-radius: 34px; background: linear-gradient(145deg, #dcf6e8, #e9e4ff); display: grid; place-items: center; box-shadow: var(--shadow); transform: rotate(2deg); }
+    .signature { position: absolute; top: 13px; right: 17px; z-index: 1; color: var(--mint-700); background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.92); border-radius: 999px; padding: 5px 10px; font-size: .73rem; font-weight: 900; letter-spacing: .03em; box-shadow: 0 5px 14px rgba(62, 122, 99, .08); }
     .cat-card svg { width: 170px; height: 145px; }
 
     .panel { background: rgba(255,255,255,.86); border: 1px solid rgba(255,255,255,.9); border-radius: 28px; box-shadow: var(--shadow); padding: 22px; backdrop-filter: blur(8px); }
@@ -102,6 +103,7 @@
         <p class="subtitle">输入每件饰品的基础抗魔和强化等级，看看离下一只小猫宝箱还有多远。</p>
       </div>
       <div class="cat-card" aria-label="Q版小猫插画">
+        <div class="signature">繁星の猫猫星</div>
         <svg viewBox="0 0 220 170" role="img" aria-hidden="true">
           <path d="M37 78 30 30l40 27c20-8 39-8 60 0l40-27-7 48c9 11 14 25 14 40 0 30-33 44-77 44s-77-14-77-44c0-15 5-29 14-40Z" fill="#fffdf8" stroke="#5b8d79" stroke-width="5" stroke-linejoin="round"/>
           <path d="m39 42 4 21 19-13Z" fill="#ffd8cd"/><path d="m164 42-4 21-19-13Z" fill="#ffd8cd"/>
