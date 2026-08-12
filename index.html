@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>喵喵抗魔小算盘</title>
+  <style>
+    :root {
+      --mint-50: #f3fbf7;
+      --mint-100: #e1f5ec;
+      --mint-200: #c8eadb;
+      --mint-500: #5dbb91;
+      --mint-700: #2e8463;
+      --lavender: #eeeaff;
+      --lavender-strong: #9186db;
+      --peach: #fff0e5;
+      --peach-strong: #e99c72;
+      --ink: #30453e;
+      --muted: #72857d;
+      --line: #dcebe4;
+      --white: #ffffff;
+      --shadow: 0 18px 50px rgba(62, 122, 99, .12);
+      font-family: "Nunito", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: var(--mint-50);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 8% 12%, #fff 0 10%, transparent 34%), linear-gradient(145deg, #f4fcf8, #eef7ff 72%, #fff7f0); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
+
+    .hero { display: grid; grid-template-columns: 1fr 245px; gap: 24px; align-items: center; margin-bottom: 24px; }
+    .eyebrow { color: var(--mint-700); font-weight: 800; letter-spacing: .08em; font-size: .82rem; margin-bottom: 7px; }
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.08; letter-spacing: -.04em; }
+    .subtitle { color: var(--muted); margin: 13px 0 0; font-size: 1rem; }
+    .cat-card { justify-self: end; width: 220px; aspect-ratio: 1.25; border-radius: 34px; background: linear-gradient(145deg, #dcf6e8, #e9e4ff); display: grid; place-items: center; box-shadow: var(--shadow); transform: rotate(2deg); }
+    .cat-card svg { width: 170px; height: 145px; }
+
+    .panel { background: rgba(255,255,255,.86); border: 1px solid rgba(255,255,255,.9); border-radius: 28px; box-shadow: var(--shadow); padding: 22px; backdrop-filter: blur(8px); }
+    .summary { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .metric { background: var(--mint-50); border: 1px solid var(--line); border-radius: 22px; padding: 18px 20px; min-height: 118px; }
+    .metric.target { background: var(--lavender); border-color: #dfdaf8; }
+    .metric.gap { background: var(--peach); border-color: #f8dfcf; }
+    .metric-label { color: var(--muted); font-size: .85rem; font-weight: 800; }
+    .metric-value { margin-top: 8px; font-size: clamp(1.55rem, 3vw, 2.3rem); font-weight: 900; letter-spacing: -.03em; }
+    .metric-value.shortage { color: #d47950; }
+    .metric-value.reached { color: var(--mint-700); }
+    .metric-hint { margin-top: 4px; color: var(--muted); font-size: .8rem; }
+    select, input { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 9px 10px; outline: none; transition: border-color .2s, box-shadow .2s; }
+    select:focus, input:focus { border-color: var(--mint-500); box-shadow: 0 0 0 4px rgba(93,187,145,.16); }
+    input[type=number] { text-align: right; }
+
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 14px; }
+    .section-head h2 { font-size: 1.2rem; margin: 0; }
+    .soft-btn { border: 1px solid var(--mint-200); background: var(--mint-100); color: var(--mint-700); border-radius: 999px; padding: 9px 15px; font-weight: 800; }
+    .soft-btn:hover { background: #d3f0e1; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: separate; border-spacing: 0 8px; width: 100%; min-width: 720px; }
+    th { text-align: left; color: var(--muted); font-size: .78rem; padding: 0 12px 4px; }
+    td { padding: 11px 12px; background: #fbfefc; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    td:first-child { border-left: 1px solid var(--line); border-radius: 14px 0 0 14px; font-weight: 800; }
+    td:last-child { border-right: 1px solid var(--line); border-radius: 0 14px 14px 0; }
+    .slot-cell { display: flex; align-items: center; gap: 9px; }
+    .slot-icon { width: 31px; height: 31px; border-radius: 11px; display: grid; place-items: center; background: var(--lavender); color: var(--lavender-strong); font-size: 1rem; }
+    .total-cell { font-weight: 900; color: var(--mint-700); text-align: right; }
+    .toggle { border: 0; width: 35px; height: 35px; border-radius: 12px; font-size: 1.1rem; font-weight: 900; }
+    .toggle.no { background: #f3f6f4; color: #a3b1aa; }
+    .toggle.yes { background: var(--mint-100); color: var(--mint-700); }
+    .total-row td { background: var(--mint-100); font-weight: 900; border-color: var(--mint-200); }
+    .total-row td:first-child { color: var(--mint-700); }
+    .tier-table { min-width: 560px; }
+    .tier-table td { padding-top: 9px; padding-bottom: 9px; }
+    .target-tier td { background: #fff8f3; border-color: #f5d8c6; }
+    .current-tier td { background: #f1fbf6; border-color: var(--mint-200); }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 9px; font-size: .78rem; font-weight: 800; }
+    .pill.locked { background: #f4f6f5; color: #98a69f; }
+    .pill.reached { background: var(--mint-100); color: var(--mint-700); }
+    .pill.current { background: var(--lavender); color: #6f64bd; }
+    .pill.target { background: var(--peach); color: #c56d42; }
+    .footnote { text-align: center; color: var(--muted); font-size: .8rem; margin: 17px 0 0; }
+    .paw { color: #b7d8c8; letter-spacing: .35em; font-size: .8rem; }
+
+    @media (max-width: 780px) {
+      .shell { width: min(100% - 20px, 600px); padding-top: 20px; }
+      .hero { grid-template-columns: 1fr; }
+      .cat-card { justify-self: start; width: 180px; }
+      .cat-card svg { width: 140px; height: 115px; }
+      .summary { grid-template-columns: 1fr; }
+      .panel { padding: 15px; border-radius: 22px; }
+      th, td { padding-left: 9px; padding-right: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">MEOW · MAGIC CHECK</div>
+        <h1>喵喵抗魔小算盘</h1>
+        <p class="subtitle">输入每件饰品的基础抗魔和强化等级，看看离下一只小猫宝箱还有多远。</p>
+      </div>
+      <div class="cat-card" aria-label="Q版小猫插画">
+        <svg viewBox="0 0 220 170" role="img" aria-hidden="true">
+          <path d="M37 78 30 30l40 27c20-8 39-8 60 0l40-27-7 48c9 11 14 25 14 40 0 30-33 44-77 44s-77-14-77-44c0-15 5-29 14-40Z" fill="#fffdf8" stroke="#5b8d79" stroke-width="5" stroke-linejoin="round"/>
+          <path d="m39 42 4 21 19-13Z" fill="#ffd8cd"/><path d="m164 42-4 21-19-13Z" fill="#ffd8cd"/>
+          <circle cx="83" cy="90" r="6" fill="#30453e"/><circle cx="137" cy="90" r="6" fill="#30453e"/>
+          <path d="M103 103q7 8 14 0M110 104v9" fill="none" stroke="#30453e" stroke-width="4" stroke-linecap="round"/>
+          <path d="M78 106 48 99M78 114 45 118M142 106l30-7M142 114l33 4" stroke="#8ab8a2" stroke-width="3" stroke-linecap="round"/>
+          <path d="M87 139q23 13 46 0" fill="none" stroke="#efb39c" stroke-width="5" stroke-linecap="round"/>
+          <path d="M169 129q20-13 28 8-15 10-28-8Z" fill="#ffcf7b" stroke="#d89f54" stroke-width="4"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="summary">
+        <div class="metric">
+          <div class="metric-label">当前总抗魔</div>
+          <div class="metric-value" id="summary-total">0</div>
+          <div class="metric-hint"><span class="paw">· · ·</span> 六件饰品合计</div>
+        </div>
+        <div class="metric target">
+          <div class="metric-label">目标饰品</div>
+          <select id="target-select" aria-label="目标饰品"></select>
+          <div class="metric-hint" id="target-threshold">掉落要求: 0</div>
+        </div>
+        <div class="metric gap">
+          <div class="metric-label" id="gap-label">还需抗魔</div>
+          <div class="metric-value shortage" id="summary-gap">0</div>
+          <div class="metric-hint" id="gap-hint">继续提升抗魔</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>我的小猫饰品</h2>
+        <button class="soft-btn" id="reset-btn" type="button">↺ 重置默认值</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>部位</th><th>基础抗魔</th><th>强化等级</th><th>单件总抗魔</th><th>饰品名称</th><th>是否更换</th></tr></thead>
+          <tbody id="equip-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-head" style="margin-top:22px"><h2>饰品掉落图鉴</h2><span class="paw">ฅ^•ﻌ•^ฅ</span></div>
+      <div class="table-wrap">
+        <table class="tier-table">
+          <thead><tr><th>饰品名称</th><th>掉落抗魔</th><th>状态</th><th>参考抗魔（蓝色中值）</th></tr></thead>
+          <tbody id="tier-tbody"></tbody>
+        </table>
+      </div>
+      <p class="footnote">单件总抗魔 = 基础抗魔 × (1 + 5% × 强化等级)，向上取整。名称和更换标记仅供记录。</p>
+    </section>
+  </main>
+
+  <script>
+    const SLOTS = [
+      { slot: '耳环', icon: '◌' }, { slot: '项链', icon: '⌁' }, { slot: '手镯', icon: '○' },
+      { slot: '戒指', icon: '◉' }, { slot: '徽章', icon: '✦' }, { slot: '腰带', icon: '▬' }
+    ].map((s) => ({ ...s, base: 0, level: 0, name: '落岩', replace: false }));
+
+    const TIERS = [
+      { name: '落岩', drop: 17801, ref: 2160 }, { name: '封印', drop: 22401, ref: 2376 },
+      { name: '祝福', drop: 22401, ref: 2612 }, { name: '祈愿', drop: 29161, ref: 2861 },
+      { name: '破晓', drop: 32254, ref: 3148 }, { name: '晨曦', drop: 36161, ref: 3469 },
+      { name: '曙光', drop: 40841, ref: 3776 }, { name: '旭日', drop: 44921, ref: 4183 },
+      { name: '苍穹', drop: 49421, ref: 4578 }, { name: '云迹', drop: 54351, ref: null }
+    ];
+    const DEFAULT_TARGET = '曙光';
+    const fmt = (n) => Number.isFinite(n) ? n.toLocaleString('zh-CN') : '0';
+
+    function calcPieceTotal(base, level) {
+      const b = BigInt(Math.round(Number(base) || 0));
+      const l = BigInt(Math.round(Number(level) || 0));
+      if (b <= 0n || l <= 0n) return Number(b);
+      const bonus = (b * l + 19n) / 20n;
+      return Number(b + bonus);
+    }
+    function getTotal() {
+      return SLOTS.reduce((sum, _, i) => sum + calcPieceTotal(document.querySelector(`#base-${i}`).value, document.querySelector(`#level-${i}`).value), 0);
+    }
+    function renderTarget() {
+      document.querySelector('#target-select').innerHTML = TIERS.map(t => `<option value="${t.name}" ${t.name === DEFAULT_TARGET ? 'selected' : ''}>${t.name}</option>`).join('');
+    }
+    function renderEquip() {
+      document.querySelector('#equip-tbody').innerHTML = SLOTS.map((s, i) => `
+        <tr>
+          <td><div class="slot-cell"><span class="slot-icon">${s.icon}</span><span>${s.slot}</span></div></td>
+          <td><input id="base-${i}" type="number" min="0" step="1" placeholder="0" aria-label="${s.slot}基础抗魔"></td>
+          <td><input id="level-${i}" type="number" min="0" max="30" step="1" placeholder="0" aria-label="${s.slot}强化等级"></td>
+          <td class="total-cell" id="total-${i}">0</td>
+          <td><select id="name-${i}" aria-label="${s.slot}饰品名称">${TIERS.map(t => `<option value="${t.name}" ${t.name === s.name ? 'selected' : ''}>${t.name}</option>`).join('')}</select></td>
+          <td><button id="toggle-${i}" class="toggle no" type="button" aria-label="切换${s.slot}是否更换">✗</button></td>
+        </tr>`).join('') + `<tr class="total-row"><td colspan="3">合计</td><td class="total-cell" id="footer-total">0</td><td colspan="2"></td></tr>`;
+    }
+    function renderTiers(total) {
+      let current = -1;
+      TIERS.forEach((t, i) => { if (total >= t.drop) current = i; });
+      const target = document.querySelector('#target-select').value;
+      document.querySelector('#tier-tbody').innerHTML = TIERS.map((t, i) => {
+        let cls = '', status = '';
+        if (t.name === target) { cls = 'target-tier'; status = total >= t.drop ? '<span class="pill target">已达标</span>' : `<span class="pill target">差${fmt(t.drop - total)}</span>`; }
+        else if (i === current) { cls = 'current-tier'; status = '<span class="pill current">当前</span>'; }
+        else if (total >= t.drop) status = '<span class="pill reached">已达成</span>';
+        else status = '<span class="pill locked">未达成</span>';
+        return `<tr class="${cls}"><td>${t.name}</td><td style="text-align:right">${fmt(t.drop)}</td><td>${status}</td><td style="text-align:right">${t.ref == null ? '--' : fmt(t.ref)}</td></tr>`;
+      }).join('');
+    }
+    function calculate() {
+      let total = 0;
+      SLOTS.forEach((_, i) => {
+        const piece = calcPieceTotal(document.querySelector(`#base-${i}`).value, document.querySelector(`#level-${i}`).value);
+        total += piece; document.querySelector(`#total-${i}`).textContent = fmt(piece);
+      });
+      document.querySelector('#summary-total').textContent = fmt(total);
+      document.querySelector('#footer-total').textContent = fmt(total);
+      const target = TIERS.find(t => t.name === document.querySelector('#target-select').value) || { drop: 0 };
+      const gap = target.drop - total;
+      document.querySelector('#target-threshold').textContent = `掉落要求: ${fmt(target.drop)}`;
+      const gapEl = document.querySelector('#summary-gap');
+      const label = document.querySelector('#gap-label');
+      const hint = document.querySelector('#gap-hint');
+      if (gap <= 0) { gapEl.textContent = '✓ 已达标'; gapEl.className = 'metric-value reached'; label.textContent = '超出抗魔'; hint.textContent = `已可掉落，超出 ${fmt(-gap)}`; }
+      else { gapEl.textContent = fmt(gap); gapEl.className = 'metric-value shortage'; label.textContent = '还需抗魔'; hint.textContent = '继续提升抗魔'; }
+      renderTiers(total);
+    }
+    function reset() {
+      SLOTS.forEach((s, i) => { document.querySelector(`#base-${i}`).value = ''; document.querySelector(`#level-${i}`).value = ''; document.querySelector(`#name-${i}`).value = s.name; const btn = document.querySelector(`#toggle-${i}`); btn.className = 'toggle no'; btn.textContent = '✗'; });
+      document.querySelector('#target-select').value = DEFAULT_TARGET; calculate();
+    }
+    renderTarget(); renderEquip();
+    document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
+    document.querySelectorAll('select').forEach(el => el.addEventListener('change', calculate));
+    SLOTS.forEach((_, i) => document.querySelector(`#toggle-${i}`).addEventListener('click', (e) => { const b = e.currentTarget; const yes = b.classList.toggle('yes'); b.classList.toggle('no', !yes); b.textContent = yes ? '✓' : '✗'; }));
+    document.querySelector('#reset-btn').addEventListener('click', reset);
+    document.querySelector('#target-select').value = DEFAULT_TARGET; calculate();
+  </script>
+</body>
+</html>
