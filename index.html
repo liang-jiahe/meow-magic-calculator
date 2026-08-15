@@ -49,9 +49,88 @@
     .metric-value.shortage { color: #d47950; }
     .metric-value.reached { color: var(--mint-700); }
     .metric-hint { margin-top: 4px; color: var(--muted); font-size: .8rem; }
-    select, input { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 9px 10px; outline: none; transition: border-color .2s, box-shadow .2s; }
-    select:focus, input:focus { border-color: var(--mint-500); box-shadow: 0 0 0 4px rgba(93,187,145,.16); }
+    input { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 9px 10px; outline: none; transition: border-color .2s, box-shadow .2s; }
+    input:focus { border-color: var(--mint-500); box-shadow: 0 0 0 4px rgba(93,187,145,.16); }
     input[type=number] { text-align: right; }
+
+    .pretty-select { position: relative; width: 100%; }
+    .pretty-select select {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+    .select-trigger {
+      width: 100%;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 11px 8px 13px;
+      color: var(--ink);
+      background: rgba(255,255,255,.94);
+      text-align: left;
+      transition: border-color .2s, box-shadow .2s, background .2s, transform .2s;
+    }
+    .select-trigger:hover { border-color: var(--mint-200); background: #fff; }
+    .select-trigger:focus-visible,
+    .select-trigger[aria-expanded="true"] { border-color: var(--mint-500); box-shadow: 0 0 0 4px rgba(93,187,145,.16); outline: none; }
+    .select-trigger[aria-expanded="true"] .select-chevron { transform: rotate(180deg); }
+    .select-chevron { width: 18px; height: 18px; flex: 0 0 auto; color: var(--mint-700); transition: transform .2s ease; }
+    .pretty-select--target .select-trigger { border-color: #d8d1f5; box-shadow: 0 5px 14px rgba(111,100,189,.08); }
+    .pretty-select--target .select-trigger:hover { border-color: #bcb2ea; }
+    .select-menu {
+      position: fixed;
+      z-index: 1000;
+      display: grid;
+      gap: 3px;
+      overflow-y: auto;
+      margin: 0;
+      padding: 7px;
+      border: 1px solid rgba(200,234,219,.9);
+      border-radius: 15px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 18px 45px rgba(48,69,62,.16), 0 4px 12px rgba(48,69,62,.08);
+      backdrop-filter: blur(14px);
+      overscroll-behavior: contain;
+      animation: select-pop .16s ease-out;
+    }
+    .select-menu[hidden] { display: none; }
+    .select-option {
+      width: 100%;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px 8px 12px;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      transition: color .15s, background .15s, transform .15s;
+    }
+    .select-option:hover,
+    .select-option:focus-visible { background: var(--mint-50); color: var(--mint-700); outline: none; }
+    .select-option:active { transform: scale(.985); }
+    .select-option[aria-selected="true"] { background: linear-gradient(135deg, var(--mint-100), #eeeaff); color: var(--mint-700); font-weight: 900; }
+    .option-check { opacity: 0; color: var(--mint-700); font-weight: 900; }
+    .select-option[aria-selected="true"] .option-check { opacity: 1; }
+    @keyframes select-pop { from { opacity: 0; transform: translateY(-5px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) {
+      .select-menu { animation: none; }
+      .select-chevron, .select-trigger, .select-option { transition: none; }
+    }
 
     .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 14px; }
     .section-head h2 { font-size: 1.2rem; margin: 0; }
@@ -198,6 +277,138 @@
           <td><button id="toggle-${i}" class="toggle no" type="button" aria-label="切换${s.slot}是否更换">✗</button></td>
         </tr>`).join('') + `<tr class="total-row"><td colspan="3">合计</td><td class="total-cell" id="footer-total">0</td><td colspan="2"></td></tr>`;
     }
+    let openSelect = null;
+
+    function closePrettySelect(restoreFocus = false) {
+      if (!openSelect) return;
+      const { trigger, menu } = openSelect;
+      trigger.setAttribute('aria-expanded', 'false');
+      menu.hidden = true;
+      if (restoreFocus) trigger.focus();
+      openSelect = null;
+    }
+
+    function positionSelectMenu(trigger, menu) {
+      const rect = trigger.getBoundingClientRect();
+      const edge = 10;
+      const gap = 7;
+      const below = window.innerHeight - rect.bottom - edge;
+      const above = rect.top - edge;
+      const idealHeight = Math.min(320, menu.scrollHeight);
+      const openAbove = below < idealHeight + gap && above > below;
+      const available = Math.max(120, Math.min(320, (openAbove ? above : below) - gap));
+      menu.style.width = `${rect.width}px`;
+      menu.style.maxHeight = `${available}px`;
+      menu.style.left = `${Math.max(edge, Math.min(rect.left, window.innerWidth - rect.width - edge))}px`;
+      menu.style.top = openAbove
+        ? `${Math.max(edge, rect.top - Math.min(menu.scrollHeight, available) - gap)}px`
+        : `${Math.min(window.innerHeight - edge, rect.bottom + gap)}px`;
+    }
+
+    function syncPrettySelect(select) {
+      const wrapper = select.closest('.pretty-select');
+      if (!wrapper) return;
+      const selected = select.options[select.selectedIndex];
+      wrapper.querySelector('.select-value').textContent = selected?.textContent || '';
+      wrapper._menu.querySelectorAll('.select-option').forEach((option, index) => {
+        option.setAttribute('aria-selected', String(index === select.selectedIndex));
+      });
+    }
+
+    function openPrettySelect(select, focusIndex = select.selectedIndex) {
+      const wrapper = select.closest('.pretty-select');
+      const trigger = wrapper.querySelector('.select-trigger');
+      const menu = wrapper._menu;
+      if (openSelect?.select === select) { closePrettySelect(); return; }
+      closePrettySelect();
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      openSelect = { select, trigger, menu };
+      positionSelectMenu(trigger, menu);
+      const option = menu.querySelectorAll('.select-option')[focusIndex];
+      if (option) {
+        option.focus({ preventScroll: true });
+        menu.scrollTop = Math.max(0, option.offsetTop - (menu.clientHeight - option.offsetHeight) / 2);
+      }
+    }
+
+    function enhanceSelects() {
+      document.querySelectorAll('select').forEach((select, selectIndex) => {
+        if (select.closest('.pretty-select')) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = `pretty-select${select.id === 'target-select' ? ' pretty-select--target' : ''}`;
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(select);
+
+        const menuId = `select-menu-${selectIndex}`;
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'select-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-controls', menuId);
+        trigger.setAttribute('aria-label', select.getAttribute('aria-label') || '选择选项');
+        trigger.innerHTML = `<span class="select-value"></span><svg class="select-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        wrapper.appendChild(trigger);
+
+        const menu = document.createElement('div');
+        menu.id = menuId;
+        menu.className = 'select-menu';
+        menu.setAttribute('role', 'listbox');
+        menu.setAttribute('aria-label', select.getAttribute('aria-label') || '选择选项');
+        menu.hidden = true;
+        menu.innerHTML = Array.from(select.options).map((option, index) => `
+          <button type="button" class="select-option" role="option" data-index="${index}" aria-selected="false">
+            <span>${option.textContent}</span><span class="option-check" aria-hidden="true">✓</span>
+          </button>`).join('');
+        document.body.appendChild(menu);
+        wrapper._menu = menu;
+
+        const choose = (index) => {
+          if (index < 0 || index >= select.options.length) return;
+          const changed = select.selectedIndex !== index;
+          select.selectedIndex = index;
+          syncPrettySelect(select);
+          closePrettySelect(true);
+          if (changed) select.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        trigger.addEventListener('click', () => openPrettySelect(select));
+        trigger.addEventListener('keydown', (event) => {
+          const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '];
+          if (!keys.includes(event.key)) return;
+          event.preventDefault();
+          let index = select.selectedIndex;
+          if (event.key === 'ArrowDown') index = Math.min(select.options.length - 1, index + 1);
+          if (event.key === 'ArrowUp') index = Math.max(0, index - 1);
+          if (event.key === 'Home') index = 0;
+          if (event.key === 'End') index = select.options.length - 1;
+          openPrettySelect(select, index);
+        });
+        menu.addEventListener('click', (event) => {
+          const option = event.target.closest('.select-option');
+          if (option) choose(Number(option.dataset.index));
+        });
+        menu.addEventListener('keydown', (event) => {
+          const options = [...menu.querySelectorAll('.select-option')];
+          const current = options.indexOf(document.activeElement);
+          let next = current;
+          if (event.key === 'ArrowDown') next = Math.min(options.length - 1, current + 1);
+          else if (event.key === 'ArrowUp') next = Math.max(0, current - 1);
+          else if (event.key === 'Home') next = 0;
+          else if (event.key === 'End') next = options.length - 1;
+          else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); choose(current); return; }
+          else if (event.key === 'Escape') { event.preventDefault(); closePrettySelect(true); return; }
+          else if (event.key === 'Tab') { closePrettySelect(); return; }
+          else return;
+          event.preventDefault();
+          options[next]?.focus();
+          options[next]?.scrollIntoView({ block: 'nearest' });
+        });
+        select.addEventListener('change', () => syncPrettySelect(select));
+        syncPrettySelect(select);
+      });
+    }
     function renderTiers(total) {
       let current = -1;
       TIERS.forEach((t, i) => { if (total >= t.drop) current = i; });
@@ -231,13 +442,23 @@
     }
     function reset() {
       SLOTS.forEach((s, i) => { document.querySelector(`#base-${i}`).value = ''; document.querySelector(`#level-${i}`).value = ''; document.querySelector(`#name-${i}`).value = s.name; const btn = document.querySelector(`#toggle-${i}`); btn.className = 'toggle no'; btn.textContent = '✗'; });
-      document.querySelector('#target-select').value = DEFAULT_TARGET; calculate();
+      document.querySelector('#target-select').value = DEFAULT_TARGET;
+      document.querySelectorAll('select').forEach(syncPrettySelect);
+      calculate();
     }
     renderTarget(); renderEquip();
+    enhanceSelects();
     document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calculate));
     document.querySelectorAll('select').forEach(el => el.addEventListener('change', calculate));
     SLOTS.forEach((_, i) => document.querySelector(`#toggle-${i}`).addEventListener('click', (e) => { const b = e.currentTarget; const yes = b.classList.toggle('yes'); b.classList.toggle('no', !yes); b.textContent = yes ? '✓' : '✗'; }));
     document.querySelector('#reset-btn').addEventListener('click', reset);
+    document.addEventListener('pointerdown', (event) => {
+      if (openSelect && !openSelect.trigger.contains(event.target) && !openSelect.menu.contains(event.target)) closePrettySelect();
+    });
+    window.addEventListener('resize', () => closePrettySelect());
+    window.addEventListener('scroll', (event) => {
+      if (openSelect && !openSelect.menu.contains(event.target)) closePrettySelect();
+    }, true);
     document.querySelector('#target-select').value = DEFAULT_TARGET; calculate();
   </script>
 </body>
